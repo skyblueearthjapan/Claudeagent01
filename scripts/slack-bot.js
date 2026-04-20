@@ -63,7 +63,6 @@ function runClaude({ prompt, sessionId, resume }) {
       '-p', prompt,
       '--output-format', 'stream-json',
       '--verbose',
-      '--cwd', resolve(VAULT_PATH),
     ];
     if (resume) args.push('--resume', sessionId);
     else args.push('--session-id', sessionId);
@@ -71,6 +70,7 @@ function runClaude({ prompt, sessionId, resume }) {
     const proc = spawn(CLAUDE_BIN, args, {
       env: { ...process.env },
       stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: resolve(VAULT_PATH),
     });
 
     let stdout = '';
