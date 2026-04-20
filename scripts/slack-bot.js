@@ -94,40 +94,44 @@ function runClaude({ prompt, sessionId, resume }) {
 }
 
 // Shared handler for both @mentions and DMs
-async function handlePrompt({ channel, ts, thread_ts, text, client, logger }) {
-  const threadKey = thread_ts ?? ts;
+async function handlePrompt({ channel, ts, thread_ts, text, isIM, client, logger }) {
+  // In DMs: conversation is flat (no threading), session keyed by channel.
+  // In channels: reply in the thread, session keyed by thread_ts (or ts for a new thread).
+  const sessionKey = isIM ? channel : (thread_ts ?? ts);
+  const replyThreadTs = isIM ? undefined : (thread_ts ?? ts);
+
   const prompt = text.replace(/<@[^>]+>\s*/g, '').trim();
   if (!prompt) return;
 
   await client.reactions.add({ channel, timestamp: ts, name: 'hourglass_flowing_sand' }).catch(() => {});
 
   try {
-    const { sessionId, resumed } = pickSession(threadKey);
+    const { sessionId, resumed } = pickSession(sessionKey);
     const replyText = await runClaude({ prompt, sessionId, resume: resumed });
-    await client.chat.postMessage({ channel, thread_ts: threadKey, text: replyText });
+    await client.chat.postMessage({ channel, thread_ts: replyThreadTs, text: replyText });
     await client.reactions.remove({ channel, timestamp: ts, name: 'hourglass_flowing_sand' }).catch(() => {});
     await client.reactions.add({ channel, timestamp: ts, name: 'white_check_mark' }).catch(() => {});
   } catch (err) {
     logger.error(err);
-    await client.chat.postMessage({ channel, thread_ts: threadKey, text: `:warning: Claude error: \`${err.message}\`` });
+    await client.chat.postMessage({ channel, thread_ts: replyThreadTs, text: `:warning: Claude error: \`${err.message}\`` });
   }
 }
 
-// @mention in channels
+// @mention in channels — reply in thread
 app.event('app_mention', async ({ event, client, logger }) => {
   await handlePrompt({
     channel: event.channel,
     ts: event.ts,
     thread_ts: event.thread_ts,
     text: event.text,
+    isIM: false,
     client,
     logger,
   });
 });
 
-// Direct messages (1:1 DM to the bot)
+// Direct messages (1:1 DM to the bot) — reply flat in the DM channel
 app.event('message', async ({ event, client, logger }) => {
-  // Filter: only plain user DMs in IM channels (no bots, no edits, no system subtypes)
   if (event.channel_type !== 'im') return;
   if (event.bot_id || event.subtype) return;
   if (!event.text) return;
@@ -137,6 +141,7 @@ app.event('message', async ({ event, client, logger }) => {
     ts: event.ts,
     thread_ts: event.thread_ts,
     text: event.text,
+    isIM: true,
     client,
     logger,
   });
