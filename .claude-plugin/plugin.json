@@ -1,0 +1,14 @@
+{
+  "name": "claudeagent01-slack-kb",
+  "version": "0.1.0",
+  "description": "Slack-integrated knowledge base plugin for Claude Code on VPS. Connects Slack Bot (Socket Mode) to Claude Code CLI with Supabase index and Obsidian vault on GitHub.",
+  "author": {
+    "name": "skyblueearthjapan"
+  },
+  "license": "MIT",
+  "keywords": ["slack", "knowledge-base", "obsidian", "supabase", "mcp", "vps"],
+  "commands": "./commands",
+  "skills": "./skills",
+  "agents": "./agents",
+  "mcpServers": "./mcp/mcp.json"
+}

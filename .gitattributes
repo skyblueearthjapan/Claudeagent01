@@ -1,0 +1,28 @@
+# Default: auto-convert text files for the current platform
+* text=auto eol=lf
+
+# Force LF for files that run on Linux VPS (shell scripts, systemd units, service files)
+*.sh            text eol=lf
+*.service       text eol=lf
+*.bash          text eol=lf
+
+# Node/Python source — keep LF to match upstream conventions
+*.js            text eol=lf
+*.mjs           text eol=lf
+*.cjs           text eol=lf
+*.ts            text eol=lf
+*.py            text eol=lf
+*.json          text eol=lf
+*.sql           text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.md            text eol=lf
+
+# Binary (never convert)
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.pdf           binary
+*.zip           binary
+*.ico           binary

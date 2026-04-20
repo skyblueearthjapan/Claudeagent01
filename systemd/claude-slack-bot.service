@@ -1,0 +1,26 @@
+[Unit]
+Description=Claudeagent01 Slack Bot (Socket Mode proxy to Claude Code CLI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=claudeagent
+Group=claudeagent
+WorkingDirectory=/opt/claudeagent01/scripts
+EnvironmentFile=/opt/claudeagent01/.env
+ExecStart=/usr/bin/node /opt/claudeagent01/scripts/slack-bot.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/claudeagent01/bot.log
+StandardError=append:/var/log/claudeagent01/bot.err.log
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/claudeagent01 /var/log/claudeagent01
+
+[Install]
+WantedBy=multi-user.target

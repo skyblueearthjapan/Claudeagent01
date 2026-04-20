@@ -1,0 +1,44 @@
+# Environment & secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json.bak
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Obsidian (vault-local settings — opt out if you want to sync workspace)
+knowledge/.obsidian/workspace*.json
+knowledge/.obsidian/cache
+knowledge/.trash/
+
+# Logs & runtime
+*.log
+logs/
+pids/
+*.pid
+
+# Build
+dist/
+build/
+
+# Local tooling state (oh-my-claudecode, etc.)
+.omc/
+.claude/settings.local.json

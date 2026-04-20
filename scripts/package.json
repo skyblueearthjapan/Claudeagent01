@@ -1,0 +1,19 @@
+{
+  "name": "claudeagent01-slack-bot",
+  "version": "0.1.0",
+  "description": "Socket Mode Slack bot that proxies messages to Claude Code CLI",
+  "private": true,
+  "type": "module",
+  "main": "slack-bot.js",
+  "scripts": {
+    "start": "node slack-bot.js",
+    "dev": "node --watch slack-bot.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.21.4",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
