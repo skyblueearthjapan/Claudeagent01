@@ -93,24 +93,53 @@ function runClaude({ prompt, sessionId, resume }) {
   });
 }
 
-// @mention → process in thread
-app.event('app_mention', async ({ event, client, logger }) => {
-  const threadKey = event.thread_ts ?? event.ts;
-  const prompt = event.text.replace(/<@[^>]+>\s*/g, '').trim();
+// Shared handler for both @mentions and DMs
+async function handlePrompt({ channel, ts, thread_ts, text, client, logger }) {
+  const threadKey = thread_ts ?? ts;
+  const prompt = text.replace(/<@[^>]+>\s*/g, '').trim();
   if (!prompt) return;
 
-  await client.reactions.add({ channel: event.channel, timestamp: event.ts, name: 'hourglass_flowing_sand' }).catch(() => {});
+  await client.reactions.add({ channel, timestamp: ts, name: 'hourglass_flowing_sand' }).catch(() => {});
 
   try {
     const { sessionId, resumed } = pickSession(threadKey);
-    const text = await runClaude({ prompt, sessionId, resume: resumed });
-    await client.chat.postMessage({ channel: event.channel, thread_ts: threadKey, text });
-    await client.reactions.remove({ channel: event.channel, timestamp: event.ts, name: 'hourglass_flowing_sand' }).catch(() => {});
-    await client.reactions.add({ channel: event.channel, timestamp: event.ts, name: 'white_check_mark' }).catch(() => {});
+    const replyText = await runClaude({ prompt, sessionId, resume: resumed });
+    await client.chat.postMessage({ channel, thread_ts: threadKey, text: replyText });
+    await client.reactions.remove({ channel, timestamp: ts, name: 'hourglass_flowing_sand' }).catch(() => {});
+    await client.reactions.add({ channel, timestamp: ts, name: 'white_check_mark' }).catch(() => {});
   } catch (err) {
     logger.error(err);
-    await client.chat.postMessage({ channel: event.channel, thread_ts: threadKey, text: `:warning: Claude error: \`${err.message}\`` });
+    await client.chat.postMessage({ channel, thread_ts: threadKey, text: `:warning: Claude error: \`${err.message}\`` });
   }
+}
+
+// @mention in channels
+app.event('app_mention', async ({ event, client, logger }) => {
+  await handlePrompt({
+    channel: event.channel,
+    ts: event.ts,
+    thread_ts: event.thread_ts,
+    text: event.text,
+    client,
+    logger,
+  });
+});
+
+// Direct messages (1:1 DM to the bot)
+app.event('message', async ({ event, client, logger }) => {
+  // Filter: only plain user DMs in IM channels (no bots, no edits, no system subtypes)
+  if (event.channel_type !== 'im') return;
+  if (event.bot_id || event.subtype) return;
+  if (!event.text) return;
+
+  await handlePrompt({
+    channel: event.channel,
+    ts: event.ts,
+    thread_ts: event.thread_ts,
+    text: event.text,
+    client,
+    logger,
+  });
 });
 
 // Slash commands
